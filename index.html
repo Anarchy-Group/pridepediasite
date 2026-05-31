@@ -73,7 +73,7 @@ header{
 
 .user-menu{
     position:relative;
-    display:none;
+    display:none; /* Managed dynamically by JS */
 }
 
 .user-button{
@@ -82,6 +82,7 @@ header{
     border:1px solid #a2a9b1;
     border-radius:4px;
     background:white;
+    font-weight:600;
 }
 
 .dropdown{
@@ -93,6 +94,7 @@ header{
     background:white;
     border:1px solid #dadde1;
     box-shadow:0 4px 12px rgba(0,0,0,.1);
+    border-radius:4px;
 }
 
 .dropdown a{
@@ -201,7 +203,6 @@ footer{
 }
 
 @media(max-width:900px){
-
     .sidebar{
         display:none;
     }
@@ -264,16 +265,13 @@ footer{
 <div class="layout">
 
 <aside class="sidebar">
-
 <h3>Navigation</h3>
-
 <a href="#">Main Page</a>
 <a href="#">Recent Changes</a>
 <a href="#">Random Article</a>
 <a href="#">Community Portal</a>
 
 <h3 style="margin-top:20px;">Topics</h3>
-
 <a href="#">Identities</a>
 <a href="#">Gender</a>
 <a href="#">Sexuality</a>
@@ -281,14 +279,12 @@ footer{
 <a href="#">History</a>
 <a href="#">Culture</a>
 <a href="#">Resources</a>
-
 </aside>
 
 <main>
 
 <section class="hero">
 <h1>Welcome to Pridepedia</h1>
-
 <p>
 The free LGBTQ+ encyclopedia and community knowledge platform.
 Explore identities, history, pride flags, culture, resources,
@@ -353,17 +349,17 @@ and community-created articles.
 </div>
 
 <footer>
-© 2025 Pridepedia • A Magic Plum Company Project
+© 2026 Pridepedia • A Magic Plum Company Project
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-
 const SUPABASE_URL = "https://jihpgbsghatuwwkacsur.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaHBnYnNnaGF0dXd3a2Fjc3VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzkxNzcsImV4cCI6MjA5MzcxNTE3N30.qH7iso7t2zoOLi0C68DiUKZecyIDhlxVcJAcNhYLHTk";
 
-const supabase = window.supabase.createClient(
+// Fixed: Prevent name clashing with global window object
+const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
 );
@@ -372,84 +368,76 @@ const authButtons = document.getElementById("auth-buttons");
 const userMenu = document.getElementById("user-menu");
 const displayName = document.getElementById("display-name");
 const createArticleBtn = document.getElementById("create-article-btn");
+const dropdown = document.getElementById("dropdown");
 
 async function loadUser() {
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
 
-    const {
-        data: { session }
-    } = await supabase.auth.getSession();
+        if (!session) {
+            authButtons.style.display = "flex";
+            userMenu.style.display = "none";
+            createArticleBtn.style.display = "none";
+            return;
+        }
 
-    if (!session) {
+        // Show authenticated UI early to avoid visible delay
+        authButtons.style.display = "none";
+        userMenu.style.display = "block";
+        createArticleBtn.style.display = "inline-block";
 
-        authButtons.style.display = "flex";
-        userMenu.style.display = "none";
-        createArticleBtn.style.display = "none";
+        const uid = session.user.id;
 
-        return;
+        // Fixed table target string to 'user_profile' (singular) matching your schema setup
+        // Note: Change .eq("id", uid) to .eq("uid", uid) if your FK column is explicitly named uid
+        const { data, error } = await supabaseClient
+            .from("user_profile")
+            .select("display_name")
+            .eq("id", uid) 
+            .single();
+
+        if (error) {
+            console.error("Error pulling public user data profile profile:", error);
+            displayName.textContent = "User";
+            return;
+        }
+
+        if (data && data.display_name) {
+            displayName.textContent = data.display_name;
+        } else {
+            displayName.textContent = "User";
+        }
+    } catch (err) {
+        console.error("Unexpected session retrieval error:", err);
     }
-
-    authButtons.style.display = "none";
-    userMenu.style.display = "block";
-    createArticleBtn.style.display = "inline-block";
-
-    const uid = session.user.id;
-
-    const { data, error } = await supabase
-        .from("user_profiles")
-        .select("display_name")
-        .eq("uid", uid)
-        .single();
-
-    if (error) {
-        console.error(error);
-        displayName.textContent = "User";
-        return;
-    }
-
-    displayName.textContent = data.display_name;
 }
 
-supabase.auth.onAuthStateChange(() => {
+// React instantly to authentication state changes
+supabaseClient.auth.onAuthStateChange(() => {
     loadUser();
 });
 
+// Run immediate check upon loading page
 loadUser();
 
-document.getElementById("user-button")
-.addEventListener("click", () => {
-
-    const dropdown =
-        document.getElementById("dropdown");
-
-    dropdown.style.display =
-        dropdown.style.display === "block"
-        ? "none"
-        : "block";
+// UI Interactivity: Dropdown Handling
+document.getElementById("user-button").addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
 });
 
 document.addEventListener("click", (event) => {
-
-    const menu =
-        document.getElementById("user-menu");
-
-    const dropdown =
-        document.getElementById("dropdown");
-
-    if (!menu.contains(event.target)) {
+    if (!userMenu.contains(event.target)) {
         dropdown.style.display = "none";
     }
 });
 
-document.getElementById("logout-btn")
-.addEventListener("click", async (e) => {
-
+// Authentication Sign Out Implementation
+document.getElementById("logout-btn").addEventListener("click", async (e) => {
     e.preventDefault();
-
-    await supabase.auth.signOut();
-
+    await supabaseClient.auth.signOut();
     window.location.reload();
 });
-
 </script>
 
 </body>

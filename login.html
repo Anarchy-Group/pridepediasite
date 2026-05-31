@@ -177,7 +177,8 @@ button:hover{
 const SUPABASE_URL = "https://jihpgbsghatuwwkacsur.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaHBnYnNnaGF0dXd3a2Fjc3VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzkxNzcsImV4cCI6MjA5MzcxNTE3N30.qH7iso7t2zoOLi0C68DiUKZecyIDhlxVcJAcNhYLHTk";
 
-const supabase = window.supabase.createClient(
+// FIX: Accessing createClient from the global supabase object
+const supabase = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
 );
@@ -197,9 +198,7 @@ const errorBox = document.getElementById("errorBox");
 const successBox = document.getElementById("successBox");
 
 async function checkExistingSession() {
-
     try {
-
         const {
             data: { session },
             error
@@ -212,44 +211,33 @@ async function checkExistingSession() {
             console.log("Existing session found.");
             window.location.href = "/";
         }
-
     } catch (err) {
-
         console.error(
             "Session check failed:",
             err
         );
-
     }
 }
 
 checkExistingSession();
 
 form.addEventListener("submit", async (e) => {
-
     e.preventDefault();
 
     errorBox.style.display = "none";
     successBox.style.display = "none";
 
-    const email =
-        document.getElementById("email").value.trim();
-
-    const password =
-        document.getElementById("password").value;
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
     console.log("Attempting login...");
-    console.log("Email:", email);
-
     form.classList.add("loading");
 
     try {
-
-        const result =
-            await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
+        const result = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
 
         console.log(
             "Full Supabase Response:",
@@ -259,20 +247,17 @@ form.addEventListener("submit", async (e) => {
         form.classList.remove("loading");
 
         if (result.error) {
-
             errorBox.innerHTML = `
                 <strong>Login Failed</strong><br>
                 Message: ${result.error.message}<br>
                 Status: ${result.error.status || "Unknown"}
             `;
-
             errorBox.style.display = "block";
 
             console.error(
                 "Supabase Login Error:",
                 result.error
             );
-
             return;
         }
 
@@ -281,9 +266,7 @@ form.addEventListener("submit", async (e) => {
             result.data.user
         );
 
-        successBox.innerHTML =
-            "Successfully signed in.";
-
+        successBox.innerHTML = "Successfully signed in.";
         successBox.style.display = "block";
 
         setTimeout(() => {
@@ -291,7 +274,6 @@ form.addEventListener("submit", async (e) => {
         }, 1000);
 
     } catch (err) {
-
         form.classList.remove("loading");
 
         console.error(
@@ -303,7 +285,6 @@ form.addEventListener("submit", async (e) => {
             <strong>Unexpected Error</strong><br>
             ${err.message}
         `;
-
         errorBox.style.display = "block";
     }
 });

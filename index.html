@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pridepedia</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f8f9fa;
+    color: #202122;
+}
+
+header {
+    background: white;
+    border-bottom: 1px solid #dadde1;
+    padding: 12px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #6b2fb3;
+}
+
+.search {
+    flex: 1;
+}
+
+.search input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #a2a9b1;
+    border-radius: 4px;
+}
+
+.layout {
+    display: flex;
+    max-width: 1600px;
+    margin: auto;
+}
+
+.sidebar {
+    width: 240px;
+    background: white;
+    border-right: 1px solid #dadde1;
+    min-height: calc(100vh - 60px);
+    padding: 20px;
+}
+
+.sidebar h3 {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: #54595d;
+    text-transform: uppercase;
+}
+
+.sidebar a {
+    display: block;
+    color: #3366cc;
+    text-decoration: none;
+    padding: 6px 0;
+}
+
+.sidebar a:hover {
+    text-decoration: underline;
+}
+
+main {
+    flex: 1;
+    padding: 30px;
+}
+
+.hero {
+    background: white;
+    border: 1px solid #dadde1;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.hero h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    color: #54595d;
+    line-height: 1.6;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border: 1px solid #dadde1;
+    padding: 20px;
+}
+
+.card h2 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.card ul {
+    list-style: none;
+}
+
+.card li {
+    margin-bottom: 8px;
+}
+
+.card a {
+    color: #3366cc;
+    text-decoration: none;
+}
+
+.card a:hover {
+    text-decoration: underline;
+}
+
+.stats {
+    margin-top: 25px;
+    background: white;
+    border: 1px solid #dadde1;
+    padding: 20px;
+}
+
+footer {
+    margin-top: 30px;
+    padding: 20px;
+    text-align: center;
+    color: #54595d;
+}
+
+@media (max-width: 900px) {
+    .sidebar {
+        display: none;
+    }
+
+    main {
+        padding: 15px;
+    }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="header-container">
+        <div class="logo">🌈 Pridepedia</div>
+
+        <div class="search">
+            <input type="search" placeholder="Search Pridepedia">
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <h3>Navigation</h3>
+
+        <a href="#">Main Page</a>
+        <a href="#">Recent Changes</a>
+        <a href="#">Random Article</a>
+        <a href="#">Community Portal</a>
+
+        <h3 style="margin-top:20px;">Topics</h3>
+
+        <a href="#">Identities</a>
+        <a href="#">Gender</a>
+        <a href="#">Sexuality</a>
+        <a href="#">Pride Flags</a>
+        <a href="#">History</a>
+        <a href="#">Culture</a>
+        <a href="#">Resources</a>
+    </aside>
+
+    <main>
+
+        <section class="hero">
+            <h1>Welcome to Pridepedia</h1>
+
+            <p>
+                Pridepedia is a free LGBTQ+ encyclopedia and community knowledge
+                platform. Explore identities, history, culture, terminology,
+                resources, and more.
+            </p>
+        </section>
+
+        <section class="grid">
+
+            <div class="card">
+                <h2>🏳️‍🌈 Identities</h2>
+                <ul>
+                    <li><a href="#">Lesbian</a></li>
+                    <li><a href="#">Gay</a></li>
+                    <li><a href="#">Bisexual</a></li>
+                    <li><a href="#">Pansexual</a></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>🏳️‍⚧️ Gender</h2>
+                <ul>
+                    <li><a href="#">Transgender</a></li>
+                    <li><a href="#">Non-binary</a></li>
+                    <li><a href="#">Genderfluid</a></li>
+                    <li><a href="#">Agender</a></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>📜 History</h2>
+                <ul>
+                    <li><a href="#">Stonewall</a></li>
+                    <li><a href="#">Pride Month</a></li>
+                    <li><a href="#">LGBT Rights</a></li>
+                    <li><a href="#">Key Events</a></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>🌍 Community</h2>
+                <ul>
+                    <li><a href="#">Discord Server</a></li>
+                    <li><a href="#">Forums</a></li>
+                    <li><a href="#">Contributors</a></li>
+                    <li><a href="#">Help Centre</a></li>
+                </ul>
+            </div>
+
+        </section>
+
+        <section class="stats">
+            <h2>Pridepedia Statistics</h2>
+            <br>
+            <p>📚 Articles: 0</p>
+            <p>👥 Contributors: 0</p>
+            <p>✏️ Edits: 0</p>
+        </section>
+
+    </main>
+
+</div>
+
+<footer>
+    © 2025 Pridepedia • A Magic Plum Company Project
+</footer>
+
+</body>
+</html>

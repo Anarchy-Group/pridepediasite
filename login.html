@@ -177,21 +177,14 @@ button:hover{
 const SUPABASE_URL = "https://jihpgbsghatuwwkacsur.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaHBnYnNnaGF0dXd3a2Fjc3VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzkxNzcsImV4cCI6MjA5MzcxNTE3N30.qH7iso7t2zoOLi0C68DiUKZecyIDhlxVcJAcNhYLHTk";
 
-// FIX: Accessing createClient from the global supabase object
-const supabase = supabase.createClient(
+// Using 'supabaseClient' avoids conflicting with the global window.supabase object from the CDN script
+const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
 );
 
-console.log(
-    "Supabase URL:",
-    SUPABASE_URL
-);
-
-console.log(
-    "Supabase Client:",
-    supabase
-);
+console.log("Supabase URL:", SUPABASE_URL);
+console.log("Supabase Client Initialized:", supabaseClient);
 
 const form = document.getElementById("loginForm");
 const errorBox = document.getElementById("errorBox");
@@ -202,7 +195,7 @@ async function checkExistingSession() {
         const {
             data: { session },
             error
-        } = await supabase.auth.getSession();
+        } = await supabaseClient.auth.getSession();
 
         console.log("Session Test:", session);
         console.log("Session Error:", error);
@@ -212,13 +205,11 @@ async function checkExistingSession() {
             window.location.href = "/";
         }
     } catch (err) {
-        console.error(
-            "Session check failed:",
-            err
-        );
+        console.error("Session check failed:", err);
     }
 }
 
+// Check for session immediately on load
 checkExistingSession();
 
 form.addEventListener("submit", async (e) => {
@@ -230,20 +221,16 @@ form.addEventListener("submit", async (e) => {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
-    console.log("Attempting login...");
+    console.log("Attempting login for:", email);
     form.classList.add("loading");
 
     try {
-        const result = await supabase.auth.signInWithPassword({
+        const result = await supabaseClient.auth.signInWithPassword({
             email,
             password
         });
 
-        console.log(
-            "Full Supabase Response:",
-            result
-        );
-
+        console.log("Full Supabase Response:", result);
         form.classList.remove("loading");
 
         if (result.error) {
@@ -254,32 +241,23 @@ form.addEventListener("submit", async (e) => {
             `;
             errorBox.style.display = "block";
 
-            console.error(
-                "Supabase Login Error:",
-                result.error
-            );
+            console.error("Supabase Login Error:", result.error);
             return;
         }
 
-        console.log(
-            "User:",
-            result.data.user
-        );
+        console.log("User Data:", result.data.user);
 
         successBox.innerHTML = "Successfully signed in.";
         successBox.style.display = "block";
 
+        // Optional delay before redirecting to allow success state to display
         setTimeout(() => {
             window.location.href = "/";
         }, 1000);
 
     } catch (err) {
         form.classList.remove("loading");
-
-        console.error(
-            "Unexpected Error:",
-            err
-        );
+        console.error("Unexpected Error during login lifecycle:", err);
 
         errorBox.innerHTML = `
             <strong>Unexpected Error</strong><br>

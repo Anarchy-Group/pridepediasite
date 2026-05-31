@@ -185,7 +185,7 @@ const form = document.getElementById("loginForm");
 const errorBox = document.getElementById("errorBox");
 const successBox = document.getElementById("successBox");
 
-// Check if user is already signed in on page load
+// Session Check
 async function checkExistingSession() {
     try {
         const { data: { session } } = await supabaseClient.auth.getSession();
@@ -211,7 +211,7 @@ form.addEventListener("submit", async (e) => {
     form.classList.add("loading");
 
     try {
-        // 1. Authenticate user
+        // 1. Log the user in
         const result = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (result.error) {
@@ -222,27 +222,29 @@ form.addEventListener("submit", async (e) => {
         }
 
         const uid = result.data.user.id;
+        const TARGET_SERVICE = "Pridepedia Portal";
 
-        // 2. Query 'user_services' targeting the exact logged in user_id
-        const { data: existingServices, error: fetchError } = await supabaseClient
+        // 2. FIXED QUERY: Specifically check if THIS user ID already has a "Pridepedia Portal" row listed
+        const { data: matchedService, error: fetchError } = await supabaseClient
             .from("user_services")
             .select("id")
-            .eq("user_id", uid);
+            .eq("user_id", uid)
+            .eq("service_name", TARGET_SERVICE);
 
         if (fetchError) {
-            console.error("Error referencing user_services table:", fetchError);
+            console.error("Error checking user_services:", fetchError);
         }
 
-        // 3. IMPORTANT CHECK: If it is not already in there for this UID, append the entry row
-        if (!existingServices || existingServices.length === 0) {
-            console.log("No existing rows match this UID. Initializing user service column entry...");
+        // 3. If that specific service name doesn't exist for this UID yet, create it!
+        if (!matchedService || matchedService.length === 0) {
+            console.log(`Missing '${TARGET_SERVICE}' for this user. Inserting service mapping row...`);
             
             const { error: insertError } = await supabaseClient
                 .from("user_services")
                 .insert([
                     {
                         user_id: uid,
-                        service_name: "Pridepedia Portal",
+                        service_name: TARGET_SERVICE,
                         service_icon: "🌈",
                         service_url: "https://pridepedia.magicplum.co.uk",
                         enabled: true
@@ -250,14 +252,16 @@ form.addEventListener("submit", async (e) => {
                 ]);
 
             if (insertError) {
-                console.error("Failed adding service mapping column entry:", insertError);
+                console.error("Failed adding service row entry:", insertError);
+            } else {
+                console.log(`Successfully mapped '${TARGET_SERVICE}' to UID.`);
             }
         } else {
-            // Found a matching row for the current UID, safely skip adding another!
-            console.log("Matching UID verification row already exists in user_services. Skipping generation.");
+            // Already has this service mapped, leave everything else untouched!
+            console.log(`User already has '${TARGET_SERVICE}' registered. Skipping entry creation.`);
         }
 
-        // Clean finish
+        // Complete process & redirect
         form.classList.remove("loading");
         successBox.textContent = "Successfully signed in. Redirecting...";
         successBox.style.display = "block";

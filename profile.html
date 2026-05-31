@@ -203,10 +203,34 @@ main{
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: 600;
 }
 
 .save-btn:hover {
     opacity: 0.9;
+}
+
+/* Plum Identity Buttons styling */
+.plum-identity-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: #4A154B; /* Distinct Plum color */
+    color: white;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: 15px;
+    transition: background 0.2s ease;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.plum-identity-btn:hover {
+    background: #39103B;
 }
 
 .meta-info {
@@ -306,6 +330,10 @@ main{
                     <div>Joined: <br><span id="meta-joined">...</span></div>
                     <div>MFA Status: <br><span id="meta-mfa">Disabled</span></div>
                 </div>
+                
+                <a href="https://identity.magicplum.co.uk" target="_blank" rel="noopener" class="plum-identity-btn">
+                    🔑 Open Plum Identity ↗
+                </a>
             </section>
         </div>
     </div>
@@ -313,7 +341,7 @@ main{
 </div>
 
 <footer>
-© 2025 Pridepedia • A Magic Plum Company Project
+© 2026 Pridepedia • A Magic Plum Company Project
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -324,14 +352,12 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// State
 let currentUserId = null;
 
 async function checkAuth() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     
     if (!session) {
-        // Not logged in? Go to login page
         window.location.href = "/login.html";
         return;
     }
@@ -356,24 +382,20 @@ async function fetchProfile() {
     }
 
     if (data) {
-        // Update UI
         const name = data.display_name || "User";
         document.getElementById("nav-display-name").textContent = name;
         document.getElementById("heading-display-name").textContent = name;
         document.getElementById("edit-display-name").value = name;
         
-        // Format Date
         const date = new Date(data.created_at);
         document.getElementById("meta-joined").textContent = date.toLocaleDateString(undefined, {
             year: 'numeric', month: 'long', day: 'numeric'
         });
 
-        // MFA
         document.getElementById("meta-mfa").textContent = data.mfa_enabled ? "Enabled" : "Disabled";
     }
 }
 
-// Update Profile
 document.getElementById("save-profile").addEventListener("click", async () => {
     const newName = document.getElementById("edit-display-name").value.trim();
     const statusMsg = document.getElementById("status-msg");
@@ -392,13 +414,12 @@ document.getElementById("save-profile").addEventListener("click", async () => {
     } else {
         statusMsg.textContent = "Profile updated successfully!";
         statusMsg.style.color = "green";
-        fetchProfile(); // Refresh UI
+        fetchProfile();
     }
 
     setTimeout(() => statusMsg.style.display = "none", 3000);
 });
 
-// Dropdown Logic
 document.getElementById("user-button").addEventListener("click", (e) => {
     e.stopPropagation();
     const dd = document.getElementById("dropdown");
@@ -409,16 +430,13 @@ document.addEventListener("click", () => {
     document.getElementById("dropdown").style.display = "none";
 });
 
-// Logout
 document.getElementById("logout-btn").addEventListener("click", async (e) => {
     e.preventDefault();
     await supabaseClient.auth.signOut();
     window.location.href = "/login.html";
 });
 
-// Start
 checkAuth();
-
 </script>
 
 </body>

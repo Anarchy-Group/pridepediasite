@@ -182,31 +182,55 @@ const supabase = window.supabase.createClient(
     SUPABASE_ANON_KEY
 );
 
+console.log(
+    "Supabase URL:",
+    SUPABASE_URL
+);
+
+console.log(
+    "Supabase Client:",
+    supabase
+);
+
 const form = document.getElementById("loginForm");
 const errorBox = document.getElementById("errorBox");
 const successBox = document.getElementById("successBox");
 
-async function checkExistingSession(){
+async function checkExistingSession() {
 
-    const {
-        data: { session }
-    } = await supabase.auth.getSession();
+    try {
 
-    if(session){
-        window.location.href = "/";
+        const {
+            data: { session },
+            error
+        } = await supabase.auth.getSession();
+
+        console.log("Session Test:", session);
+        console.log("Session Error:", error);
+
+        if (session) {
+            console.log("Existing session found.");
+            window.location.href = "/";
+        }
+
+    } catch (err) {
+
+        console.error(
+            "Session check failed:",
+            err
+        );
+
     }
 }
 
 checkExistingSession();
 
-form.addEventListener("submit", async (e)=>{
+form.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
     errorBox.style.display = "none";
     successBox.style.display = "none";
-
-    form.classList.add("loading");
 
     const email =
         document.getElementById("email").value.trim();
@@ -214,32 +238,74 @@ form.addEventListener("submit", async (e)=>{
     const password =
         document.getElementById("password").value;
 
-    const { error } =
-        await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
+    console.log("Attempting login...");
+    console.log("Email:", email);
 
-    form.classList.remove("loading");
+    form.classList.add("loading");
 
-    if(error){
+    try {
 
-        errorBox.textContent =
-            error.message;
+        const result =
+            await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+        console.log(
+            "Full Supabase Response:",
+            result
+        );
+
+        form.classList.remove("loading");
+
+        if (result.error) {
+
+            errorBox.innerHTML = `
+                <strong>Login Failed</strong><br>
+                Message: ${result.error.message}<br>
+                Status: ${result.error.status || "Unknown"}
+            `;
+
+            errorBox.style.display = "block";
+
+            console.error(
+                "Supabase Login Error:",
+                result.error
+            );
+
+            return;
+        }
+
+        console.log(
+            "User:",
+            result.data.user
+        );
+
+        successBox.innerHTML =
+            "Successfully signed in.";
+
+        successBox.style.display = "block";
+
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 1000);
+
+    } catch (err) {
+
+        form.classList.remove("loading");
+
+        console.error(
+            "Unexpected Error:",
+            err
+        );
+
+        errorBox.innerHTML = `
+            <strong>Unexpected Error</strong><br>
+            ${err.message}
+        `;
 
         errorBox.style.display = "block";
-
-        return;
     }
-
-    successBox.textContent =
-        "Successfully signed in.";
-
-    successBox.style.display = "block";
-
-    setTimeout(()=>{
-        window.location.href = "/";
-    }, 750);
 });
 
 </script>

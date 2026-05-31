@@ -86,6 +86,7 @@ button:hover{
     border:1px solid #ffb3b3;
     color:#b00020;
     border-radius:4px;
+    margin-bottom:15px;
 }
 
 .success{
@@ -95,6 +96,7 @@ button:hover{
     border:1px solid #9ad99a;
     color:#006400;
     border-radius:4px;
+    margin-bottom:15px;
 }
 
 .links{
@@ -170,48 +172,33 @@ button:hover{
 
 </div>
 
+<!-- Supabase CDN Script -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-
 const SUPABASE_URL = "https://jihpgbsghatuwwkacsur.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaHBnYnNnaGF0dXd3a2Fjc3VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzkxNzcsImV4cCI6MjA5MzcxNTE3N30.qH7iso7t2zoOLi0C68DiUKZecyIDhlxVcJAcNhYLHTk";
 
-// Using 'supabaseClient' avoids conflicting with the global window.supabase object from the CDN script
-const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-);
-
-console.log("Supabase URL:", SUPABASE_URL);
-console.log("Supabase Client Initialized:", supabaseClient);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const form = document.getElementById("loginForm");
 const errorBox = document.getElementById("errorBox");
 const successBox = document.getElementById("successBox");
 
+// Check if user is already signed in on page load
 async function checkExistingSession() {
     try {
-        const {
-            data: { session },
-            error
-        } = await supabaseClient.auth.getSession();
-
-        console.log("Session Test:", session);
-        console.log("Session Error:", error);
-
+        const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
-            console.log("Existing session found.");
             window.location.href = "/";
         }
     } catch (err) {
         console.error("Session check failed:", err);
     }
 }
-
-// Check for session immediately on load
 checkExistingSession();
 
+// Form Submission
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -221,52 +208,70 @@ form.addEventListener("submit", async (e) => {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
-    console.log("Attempting login for:", email);
     form.classList.add("loading");
 
     try {
-        const result = await supabaseClient.auth.signInWithPassword({
-            email,
-            password
-        });
-
-        console.log("Full Supabase Response:", result);
-        form.classList.remove("loading");
+        // 1. Authenticate user
+        const result = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (result.error) {
-            errorBox.innerHTML = `
-                <strong>Login Failed</strong><br>
-                Message: ${result.error.message}<br>
-                Status: ${result.error.status || "Unknown"}
-            `;
+            form.classList.remove("loading");
+            errorBox.innerHTML = `<strong>Login Failed</strong><br>${result.error.message}`;
             errorBox.style.display = "block";
-
-            console.error("Supabase Login Error:", result.error);
             return;
         }
 
-        console.log("User Data:", result.data.user);
+        const uid = result.data.user.id;
 
-        successBox.innerHTML = "Successfully signed in.";
+        // 2. Query 'user_services' targeting the exact logged in user_id
+        const { data: existingServices, error: fetchError } = await supabaseClient
+            .from("user_services")
+            .select("id")
+            .eq("user_id", uid);
+
+        if (fetchError) {
+            console.error("Error referencing user_services table:", fetchError);
+        }
+
+        // 3. IMPORTANT CHECK: If it is not already in there for this UID, append the entry row
+        if (!existingServices || existingServices.length === 0) {
+            console.log("No existing rows match this UID. Initializing user service column entry...");
+            
+            const { error: insertError } = await supabaseClient
+                .from("user_services")
+                .insert([
+                    {
+                        user_id: uid,
+                        service_name: "Pridepedia Portal",
+                        service_icon: "🌈",
+                        service_url: "https://pridepedia.org",
+                        enabled: true
+                    }
+                ]);
+
+            if (insertError) {
+                console.error("Failed adding service mapping column entry:", insertError);
+            }
+        } else {
+            // Found a matching row for the current UID, safely skip adding another!
+            console.log("Matching UID verification row already exists in user_services. Skipping generation.");
+        }
+
+        // Clean finish
+        form.classList.remove("loading");
+        successBox.textContent = "Successfully signed in. Redirecting...";
         successBox.style.display = "block";
 
-        // Optional delay before redirecting to allow success state to display
         setTimeout(() => {
             window.location.href = "/";
-        }, 1000);
+        }, 800);
 
     } catch (err) {
         form.classList.remove("loading");
-        console.error("Unexpected Error during login lifecycle:", err);
-
-        errorBox.innerHTML = `
-            <strong>Unexpected Error</strong><br>
-            ${err.message}
-        `;
+        errorBox.innerHTML = `<strong>Unexpected Runtime Error</strong><br>${err.message}`;
         errorBox.style.display = "block";
     }
 });
-
 </script>
 
 </body>

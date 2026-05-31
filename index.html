@@ -73,7 +73,7 @@ header{
 
 .user-menu{
     position:relative;
-    display:none; /* Managed dynamically by JS */
+    display:none;
 }
 
 .user-button{
@@ -358,7 +358,6 @@ and community-created articles.
 const SUPABASE_URL = "https://jihpgbsghatuwwkacsur.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppaHBnYnNnaGF0dXd3a2Fjc3VyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMzkxNzcsImV4cCI6MjA5MzcxNTE3N30.qH7iso7t2zoOLi0C68DiUKZecyIDhlxVcJAcNhYLHTk";
 
-// Fixed: Prevent name clashing with global window object
 const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
@@ -381,23 +380,21 @@ async function loadUser() {
             return;
         }
 
-        // Show authenticated UI early to avoid visible delay
         authButtons.style.display = "none";
         userMenu.style.display = "block";
         createArticleBtn.style.display = "inline-block";
 
         const uid = session.user.id;
 
-        // Fixed table target string to 'user_profile' (singular) matching your schema setup
-        // Note: Change .eq("id", uid) to .eq("uid", uid) if your FK column is explicitly named uid
+        // FIXED: Changed table target to 'user_profiles' (plural) to match your database schema
         const { data, error } = await supabaseClient
-            .from("user_profile")
+            .from("user_profiles")
             .select("display_name")
             .eq("id", uid) 
             .single();
 
         if (error) {
-            console.error("Error pulling public user data profile profile:", error);
+            console.error("Error pulling public user profiles data:", error);
             displayName.textContent = "User";
             return;
         }
@@ -412,15 +409,12 @@ async function loadUser() {
     }
 }
 
-// React instantly to authentication state changes
 supabaseClient.auth.onAuthStateChange(() => {
     loadUser();
 });
 
-// Run immediate check upon loading page
 loadUser();
 
-// UI Interactivity: Dropdown Handling
 document.getElementById("user-button").addEventListener("click", (e) => {
     e.stopPropagation();
     dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
@@ -432,7 +426,6 @@ document.addEventListener("click", (event) => {
     }
 });
 
-// Authentication Sign Out Implementation
 document.getElementById("logout-btn").addEventListener("click", async (e) => {
     e.preventDefault();
     await supabaseClient.auth.signOut();

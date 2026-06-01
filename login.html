@@ -222,7 +222,7 @@ form.addEventListener("submit", async (e) => {
         }
 
         const uid = result.data.user.id;
-        const TARGET_SERVICE = "Pridepedia";
+        const TARGET_SERVICE = "Pridepedia Portal";
 
         // 2. FIXED QUERY: Specifically check if THIS user ID already has a "Pridepedia Portal" row listed
         const { data: matchedService, error: fetchError } = await supabaseClient
